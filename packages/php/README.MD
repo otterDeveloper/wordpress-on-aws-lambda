@@ -1,0 +1,1 @@
+*Based on the MIT Licensed project by [Keitaroh Kobayashi](https://github.com/KotobaMedia/terraform-aws-wordpress-on-lambda-efs)*
