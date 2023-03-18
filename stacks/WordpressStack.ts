@@ -1,4 +1,4 @@
-import { StackContext, Api } from "sst/constructs";
+import { StackContext, Api, Function } from "sst/constructs";
 import * as vpc from "aws-cdk-lib/aws-ec2";
 import {
 	Function as CDKFunction,
@@ -52,8 +52,15 @@ export function WordpressRuntimeStack({ stack }: StackContext) {
 		filesystem: fileSystemOptions,
 	});
 
-
-
+	const wordpressInstallFunction = new Function(
+		stack,
+		"wordpressInstallFunction",
+		{
+			runtime: "nodejs18.x",
+			filesystem: fileSystemOptions,
+			handler: "packages/functions/install.handler",
+		},
+	);
 	const api = new Api(stack, "api", {
 		routes: {
 			$default: {
@@ -65,5 +72,6 @@ export function WordpressRuntimeStack({ stack }: StackContext) {
 	});
 	stack.addOutputs({
 		ApiEndpoint: api.url,
+		InstallFunctionName: wordpressInstallFunction.functionName,
 	});
 }

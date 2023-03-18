@@ -7,11 +7,13 @@
     "typecheck": "tsc -noEmit"
   },
   "devDependencies": {
-    "@types/node": "^18.15.3",
+    "@types/adm-zip": "^0.5.0",
     "@types/aws-lambda": "^8.10.113",
+    "@types/node": "^18.15.3",
     "sst": "^2.1.35"
   },
   "dependencies": {
+    "adm-zip": "^0.5.10",
     "sst": "^2.1.35"
   }
 }
