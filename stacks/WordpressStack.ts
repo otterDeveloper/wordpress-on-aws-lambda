@@ -47,6 +47,7 @@ export function WordpressRuntimeStack({ stack }: StackContext) {
 	const wordpressFunction = new CDKFunction(stack, "wordpressFunction", {
 		runtime: Runtime.PROVIDED_AL2,
 		code: Code.fromAsset("pakages/php"),
+		memorySize: 2048,
 		handler: "handler.php",
 		layers: [phpLayer],
 		filesystem: fileSystemOptions,
@@ -57,6 +58,7 @@ export function WordpressRuntimeStack({ stack }: StackContext) {
 		"wordpressInstallFunction",
 		{
 			runtime: "nodejs18.x",
+			memorySize: "1 GB",
 			filesystem: fileSystemOptions,
 			handler: "packages/functions/install.handler",
 		},
