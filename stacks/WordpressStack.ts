@@ -6,15 +6,16 @@ import {
 	Code,
 	LayerVersion,
 } from "aws-cdk-lib/aws-lambda";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as efs from "aws-cdk-lib/aws-efs";
-import { FileSystem } from "aws-cdk-lib";
+import { FileSystem, RemovalPolicy } from "aws-cdk-lib";
 import { IpAddresses } from "aws-cdk-lib/aws-ec2";
 export function WordpressRuntimeStack({ stack }: StackContext) {
 	//use 8.2 layer
 	const phpLayer = LayerVersion.fromLayerVersionArn(
 		stack,
 		"phpLayer",
-		"arn:aws:lambda:us-east-1:209497400698:layer:php-82:27",
+		"arn:aws:lambda:us-east-1:209497400698:layer:php-80:41",
 	);
 
 	//TODO: receive vpc id from env variable
@@ -37,6 +38,7 @@ export function WordpressRuntimeStack({ stack }: StackContext) {
 	const dataEfs = new efs.FileSystem(stack, "wordpressEfs", {
 		vpc: vpcStack,
 		lifecyclePolicy: efs.LifecyclePolicy.AFTER_14_DAYS,
+		removalPolicy: RemovalPolicy.DESTROY,
 	});
 
 	const efsAccessPoint = new efs.AccessPoint(stack, "efsAccessPoint", {
@@ -54,12 +56,7 @@ export function WordpressRuntimeStack({ stack }: StackContext) {
 		path: "/wordpress",
 	});
 
-	const fileSystemOptions = {
-		config: {
-			arn: efsAccessPoint.accessPointArn,
-			localMountPath: "/mnt/root",
-		},
-	} satisfies FileSystem;
+	const fileSystemOptions = lambda.FileSystem.fromEfsAccessPoint(efsAccessPoint, "/mnt/root")
 
 	const wordpressFunction = new CDKFunction(stack, "wordpressFunction", {
 		runtime: Runtime.PROVIDED_AL2,
