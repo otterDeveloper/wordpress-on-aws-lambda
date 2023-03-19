@@ -1,5 +1,5 @@
 import { StackContext, Api, Function } from "sst/constructs";
-import * as vpc from "aws-cdk-lib/aws-ec2";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
 import {
 	Function as CDKFunction,
 	Runtime,
@@ -8,6 +8,7 @@ import {
 } from "aws-cdk-lib/aws-lambda";
 import * as efs from "aws-cdk-lib/aws-efs";
 import { FileSystem } from "aws-cdk-lib";
+import { IpAddresses } from "aws-cdk-lib/aws-ec2";
 export function WordpressRuntimeStack({ stack }: StackContext) {
 	//use 8.2 layer
 	const phpLayer = LayerVersion.fromLayerVersionArn(
@@ -17,7 +18,22 @@ export function WordpressRuntimeStack({ stack }: StackContext) {
 	);
 
 	//TODO: receive vpc id from env variable
-	const vpcStack = vpc.Vpc.fromLookup(stack, "vpc", { isDefault: true });
+	const vpcStack = new ec2.Vpc(stack, "the-vpc", {
+		ipAddresses: IpAddresses.cidr("10.0.0.0/16"),
+		maxAzs: 2,
+		subnetConfiguration: [
+			{
+				cidrMask: 24,
+				name: "Public",
+				subnetType: ec2.SubnetType.PUBLIC,
+			},
+			{
+				cidrMask: 24,
+				name: "Private",
+				subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+			},
+		],
+	});
 	const dataEfs = new efs.FileSystem(stack, "wordpressEfs", {
 		vpc: vpcStack,
 		lifecyclePolicy: efs.LifecyclePolicy.AFTER_14_DAYS,
@@ -62,7 +78,7 @@ export function WordpressRuntimeStack({ stack }: StackContext) {
 			runtime: "nodejs18.x",
 			memorySize: "1 GB",
 			filesystem: fileSystemOptions,
-			handler: "packages/functions/install.handler",
+			handler: "packages/functions/src/install.handler",
 			vpc: vpcStack,
 		},
 	);
