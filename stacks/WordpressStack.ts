@@ -17,8 +17,9 @@ export function WordpressRuntimeStack({ stack }: StackContext) {
 	);
 
 	//TODO: receive vpc id from env variable
+	const vpcStack = vpc.Vpc.fromLookup(stack, "vpc", { isDefault: true });
 	const dataEfs = new efs.FileSystem(stack, "wordpressEfs", {
-		vpc: vpc.Vpc.fromLookup(stack, "vpc", { isDefault: true }),
+		vpc: vpcStack,
 		lifecyclePolicy: efs.LifecyclePolicy.AFTER_14_DAYS,
 	});
 
@@ -46,11 +47,12 @@ export function WordpressRuntimeStack({ stack }: StackContext) {
 
 	const wordpressFunction = new CDKFunction(stack, "wordpressFunction", {
 		runtime: Runtime.PROVIDED_AL2,
-		code: Code.fromAsset("pakages/php"),
+		code: Code.fromAsset("packages/php.zip"),
 		memorySize: 2048,
 		handler: "handler.php",
 		layers: [phpLayer],
 		filesystem: fileSystemOptions,
+		vpc: vpcStack,
 	});
 
 	const wordpressInstallFunction = new Function(
@@ -61,6 +63,7 @@ export function WordpressRuntimeStack({ stack }: StackContext) {
 			memorySize: "1 GB",
 			filesystem: fileSystemOptions,
 			handler: "packages/functions/install.handler",
+			vpc: vpcStack,
 		},
 	);
 	const api = new Api(stack, "api", {
